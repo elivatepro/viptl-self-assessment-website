@@ -655,7 +655,7 @@ const AboutPage: React.FC = () => {
           
           <div className="space-y-6 text-gray-300">
             <p className="text-lg leading-relaxed">
-              The VIP Self-Assessment is designed specifically for Black men and women navigating major life transitions. 
+              The VIPTL Self-Assessment is designed specifically for Black men and women navigating major life transitions. 
               Drawing from over 15 years of coaching experience, this tool helps you gain clarity across the key domains 
               that shape your life and legacy.
             </p>
