@@ -1,0 +1,51 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* Soft grainy texture overlay */
+.grain-texture {
+  position: relative;
+}
+
+.grain-texture::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-image: 
+    radial-gradient(circle at 1px 1px, rgba(255,255,255,0.08) 1px, transparent 0),
+    radial-gradient(circle at 3px 2px, rgba(255,255,255,0.05) 1px, transparent 0);
+  background-size: 20px 20px, 30px 30px;
+  opacity: 0.03;
+  pointer-events: none;
+  z-index: 1;
+}
+
+.grain-texture-dark {
+  position: relative;
+}
+
+.grain-texture-dark::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-image: 
+    radial-gradient(circle at 1px 1px, rgba(255,255,255,0.1) 1px, transparent 0),
+    radial-gradient(circle at 4px 3px, rgba(255,255,255,0.06) 1px, transparent 0);
+  background-size: 25px 25px, 35px 35px;
+  opacity: 0.04;
+  pointer-events: none;
+  z-index: 1;
+}
+
+/* Ensure content stays above texture */
+.grain-texture > *,
+.grain-texture-dark > * {
+  position: relative;
+  z-index: 5;
+}
