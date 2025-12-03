@@ -133,7 +133,7 @@ const HomePage: React.FC<{ onPageChange: (page: string) => void }> = ({ onPageCh
                     <span className="block mb-2">Welcome to Your</span>
                     <span className="block bg-gradient-to-r from-amber-300 via-amber-400 to-amber-500 bg-clip-text text-transparent">
                       <TypewriterText 
-                        texts={['Breakthrough', 'Transformation', 'Renaissance', 'Awakening']}
+                        texts={['Breakthrough', 'Transformation', 'Epiphany', 'Awakening']}
                         speed={150}
                         deleteSpeed={100}
                         pauseTime={2000}
