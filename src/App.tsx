@@ -660,6 +660,18 @@ const AboutPage: React.FC = () => {
               that shape your life and legacy.
             </p>
 
+            <div className="bg-gradient-to-r from-amber-400/10 to-amber-600/10 rounded-xl p-5 border border-amber-400/20 flex items-center justify-between flex-wrap gap-3">
+              <div className="text-sm uppercase tracking-wide text-amber-300 font-semibold">Website</div>
+              <a
+                href="https://viptransformativeliving.com"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="text-amber-100 font-bold underline decoration-amber-400 decoration-2 underline-offset-4 hover:text-white transition-colors"
+              >
+                viptransformativeliving.com
+              </a>
+            </div>
+
             <div className="bg-gradient-to-r from-amber-400/10 to-amber-600/10 rounded-xl p-6 border border-amber-400/20">
               <h2 className="text-2xl font-semibold text-amber-400 mb-4">Our Mission</h2>
               <p className="text-gray-300 leading-relaxed">
