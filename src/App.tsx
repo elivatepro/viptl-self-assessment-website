@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { ArrowRight, CheckCircle, Users, Target, Heart, Brain, Star, Calendar, Menu, X } from 'lucide-react';
 import TypewriterText from './components/TypewriterText';
+import newMrWayneImage from './assets/new mr wayne.jpeg';
 
 interface NavigationProps {
   currentPage: string;
@@ -275,9 +276,9 @@ const HomePage: React.FC<{ onPageChange: (page: string) => void }> = ({ onPageCh
             <div className="relative">
               <div className="absolute inset-0 bg-gradient-to-r from-amber-400/20 to-amber-600/20 rounded-2xl blur-xl"></div>
               <img
-                src="https://storage.googleapis.com/msgsndr/caNSYCITaUdvuPWo8p4E/media/68d88c91d2bc902e5af0691c.jpeg"
-                alt="Professional leadership coaching"
-                className="relative w-full h-auto rounded-2xl shadow-2xl shadow-amber-400/20 border border-amber-400/20"
+                src={newMrWayneImage}
+                alt="Transformational leadership coaching portrait"
+                className="relative w-full h-auto rounded-2xl shadow-2xl shadow-amber-400/20 border border-amber-400/20 object-cover"
               />
             </div>
             <div className="mt-12 lg:mt-0">
