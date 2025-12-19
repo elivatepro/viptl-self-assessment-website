@@ -323,19 +323,12 @@ const HomePage: React.FC<{ onPageChange: (page: string) => void }> = ({ onPageCh
 
 const zohoFormPermaId = 'HhEr0QppDGWkygKjgygQH5ypDz5L7SGlyZeZ22Td8EM';
 
-const AssessmentPage: React.FC<{ onPageChange: (page: string) => void }> = ({ onPageChange }) => {
+const AssessmentPage: React.FC = () => {
   const [formStarted, setFormStarted] = useState(false);
   const formContainerRef = useRef<HTMLDivElement | null>(null);
   const zohoFormDivId = `zf_div_${zohoFormPermaId}`;
-  const successHandledRef = useRef(false);
 
   const isDev = import.meta.env.DEV;
-
-  useEffect(() => {
-    if (!formStarted) {
-      successHandledRef.current = false;
-    }
-  }, [formStarted]);
 
   useEffect(() => {
     if (!formStarted) {
@@ -348,34 +341,6 @@ const AssessmentPage: React.FC<{ onPageChange: (page: string) => void }> = ({ on
     }
 
     let iframeSrc = `https://forms.zohopublic.com/elivate/form/VIPTLSelfAssessment/formperma/${zohoFormPermaId}?zf_rszfm=1`;
-
-    const containsThankYou = (value?: string | null) => {
-      if (!value) {
-        return false;
-      }
-      const normalized = value.toString().toLowerCase();
-      return normalized.includes('thank') || normalized.includes('success');
-    };
-
-    const payloadContainsThankYou = (payload: unknown): boolean => {
-      if (typeof payload === 'string') {
-        return containsThankYou(payload);
-      }
-
-      if (payload && typeof payload === 'object') {
-        return Object.values(payload as Record<string, unknown>).some((value) => payloadContainsThankYou(value));
-      }
-
-      return false;
-    };
-
-    const handleSuccessNavigation = () => {
-      if (successHandledRef.current) {
-        return;
-      }
-      successHandledRef.current = true;
-      onPageChange('success');
-    };
 
     try {
       const win = window as typeof window & Record<string, any>;
@@ -443,9 +408,6 @@ const AssessmentPage: React.FC<{ onPageChange: (page: string) => void }> = ({ on
       }
 
       if (typeof eventData !== 'string') {
-        if (payloadContainsThankYou(eventData)) {
-          handleSuccessNavigation();
-        }
         return;
       }
 
@@ -453,9 +415,6 @@ const AssessmentPage: React.FC<{ onPageChange: (page: string) => void }> = ({ on
 
       // Zoho sends pipe-delimited messages: <perma>|<height>|<action?>
       if (!trimmedData.startsWith(`${zohoFormPermaId}|`)) {
-        if (payloadContainsThankYou(trimmedData)) {
-          handleSuccessNavigation();
-        }
         return;
       }
 
@@ -466,37 +425,21 @@ const AssessmentPage: React.FC<{ onPageChange: (page: string) => void }> = ({ on
         const paddedHeight = Math.max(320, Math.ceil(parsedHeight + 20));
         iframe.style.height = `${paddedHeight}px`;
 
-        const isLikelyThankYou = !actionToken && parsedHeight > 0 && parsedHeight < 400;
-        if (isLikelyThankYou) {
-          handleSuccessNavigation();
-          return;
-        }
-
         const shouldScroll = actionToken && actionToken.toLowerCase().includes('scroll');
         if (shouldScroll) {
           iframe.scrollIntoView({ behavior: 'smooth', block: 'start' });
         }
       }
     };
-
-    const handleIframeLoad = () => {
-      const currentSrc = iframe.getAttribute('src');
-      if (containsThankYou(currentSrc)) {
-        handleSuccessNavigation();
-      }
-    };
-
-    iframe.addEventListener('load', handleIframeLoad);
     window.addEventListener('message', handleMessage);
 
     return () => {
-      iframe.removeEventListener('load', handleIframeLoad);
       window.removeEventListener('message', handleMessage);
       if (container.contains(iframe)) {
         container.removeChild(iframe);
       }
     };
-  }, [formStarted, onPageChange]);
+  }, [formStarted]);
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-black via-gray-900 to-black grain-texture">
@@ -823,7 +766,7 @@ function App() {
       case 'home':
         return <HomePage onPageChange={setCurrentPage} />;
       case 'assessment':
-        return <AssessmentPage onPageChange={setCurrentPage} />;
+        return <AssessmentPage />;
       case 'success':
         return <SuccessPage onPageChange={setCurrentPage} />;
       case 'about':
