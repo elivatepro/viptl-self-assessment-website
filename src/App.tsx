@@ -1,14 +1,27 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { ArrowRight, CheckCircle, Users, Target, Heart, Brain, Star, Calendar, Menu, X } from 'lucide-react';
+import { ArrowRight, CheckCircle, Users, Target, Heart, Brain, Star, Calendar, Menu, X, ShieldCheck, LogOut, Loader2, Download, ExternalLink } from 'lucide-react';
 import TypewriterText from './components/TypewriterText';
 import newMrWayneImage from './assets/new mr wayne.jpeg';
 
-interface NavigationProps {
-  currentPage: string;
-  onPageChange: (page: string) => void;
+type Page = 'home' | 'assessment' | 'success' | 'about' | 'login' | 'admin';
+
+interface AssessmentRecord {
+  id: string;
+  name: string;
+  email: string;
+  score: number | null;
+  client_pdf_url?: string | null;
+  coach_pdf_url?: string | null;
+  created_at: string;
 }
 
-const Navigation: React.FC<NavigationProps> = ({ currentPage, onPageChange }) => {
+interface NavigationProps {
+  currentPage: Page;
+  onPageChange: (page: Page) => void;
+  isAdminAuthed: boolean;
+}
+
+const Navigation: React.FC<NavigationProps> = ({ currentPage, onPageChange, isAdminAuthed }) => {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
 
   return (
@@ -53,6 +66,16 @@ const Navigation: React.FC<NavigationProps> = ({ currentPage, onPageChange }) =>
                 }`}
               >
                 About
+              </button>
+              <button
+                onClick={() => onPageChange(isAdminAuthed ? 'admin' : 'login')}
+                className={`px-4 py-2 rounded-lg text-sm font-semibold transition-all duration-300 ${
+                  currentPage === 'login' || currentPage === 'admin' 
+                    ? 'text-black bg-gradient-to-r from-amber-300 to-amber-400 shadow-lg shadow-amber-400/25' 
+                    : 'text-amber-300 hover:text-black hover:bg-gradient-to-r hover:from-amber-300 hover:to-amber-400 hover:shadow-lg hover:shadow-amber-400/25'
+                }`}
+              >
+                Coach
               </button>
             </div>
           </div>
@@ -111,6 +134,19 @@ const Navigation: React.FC<NavigationProps> = ({ currentPage, onPageChange }) =>
               >
                 About
               </button>
+              <button
+                onClick={() => {
+                  onPageChange(isAdminAuthed ? 'admin' : 'login');
+                  setIsMobileMenuOpen(false);
+                }}
+                className={`block w-full text-left px-3 py-2 rounded-md text-base font-medium transition-all duration-300 ${
+                  currentPage === 'login' || currentPage === 'admin'
+                    ? 'text-black bg-gradient-to-r from-amber-300 to-amber-400' 
+                    : 'text-amber-300 hover:text-black hover:bg-gradient-to-r hover:from-amber-300 hover:to-amber-400'
+                }`}
+              >
+                Coach
+              </button>
             </div>
           </div>
         )}
@@ -119,7 +155,7 @@ const Navigation: React.FC<NavigationProps> = ({ currentPage, onPageChange }) =>
   );
 };
 
-const HomePage: React.FC<{ onPageChange: (page: string) => void }> = ({ onPageChange }) => {
+const HomePage: React.FC<{ onPageChange: (page: Page) => void }> = ({ onPageChange }) => {
   return (
     <div className="min-h-screen bg-gradient-to-br from-black via-gray-900 to-black grain-texture">
       {/* Hero Section */}
@@ -503,7 +539,7 @@ const AssessmentPage: React.FC = () => {
   );
 };
 
-const SuccessPage: React.FC<{ onPageChange: (page: string) => void }> = ({ onPageChange }) => {
+const SuccessPage: React.FC<{ onPageChange: (page: Page) => void }> = ({ onPageChange }) => {
   return (
     <div className="min-h-screen bg-gradient-to-br from-black via-gray-900 to-black grain-texture">
       <div className="max-w-4xl mx-auto py-12 px-4 sm:px-6 lg:px-8">
@@ -583,6 +619,300 @@ const SuccessPage: React.FC<{ onPageChange: (page: string) => void }> = ({ onPag
                 </div>
               </div>
             </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+};
+
+const AdminLoginPage: React.FC<{ onLoginSuccess: () => void }> = ({ onLoginSuccess }) => {
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
+  const [error, setError] = useState('');
+  const [isLoading, setIsLoading] = useState(false);
+
+  const handleSubmit = async (event: React.FormEvent) => {
+    event.preventDefault();
+    setIsLoading(true);
+    setError('');
+
+    try {
+      const response = await fetch('/api/admin/login', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        credentials: 'include',
+        body: JSON.stringify({ email, password }),
+      });
+
+      if (!response.ok) {
+        const payload = await response.json().catch(() => null);
+        const message = payload?.error || 'Invalid credentials. Please try again.';
+        throw new Error(message);
+      }
+
+      setEmail('');
+      setPassword('');
+      onLoginSuccess();
+    } catch (loginError) {
+      setError((loginError as Error).message);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  return (
+    <div className="min-h-screen bg-gradient-to-br from-black via-gray-900 to-black grain-texture flex items-center justify-center px-4">
+      <div className="w-full max-w-xl bg-gradient-to-br from-gray-900 to-black rounded-2xl shadow-2xl shadow-amber-400/10 border border-amber-400/20 p-8">
+        <div className="flex items-center space-x-3 mb-6">
+          <ShieldCheck className="h-8 w-8 text-amber-400" />
+          <div>
+            <p className="text-sm text-amber-300 uppercase tracking-wide">Coach Portal</p>
+            <h1 className="text-2xl font-bold text-white">Secure Sign In</h1>
+          </div>
+        </div>
+
+        <p className="text-gray-300 mb-8">
+          Enter the coach credentials to access submitted assessments and reports.
+        </p>
+
+        <form onSubmit={handleSubmit} className="space-y-6">
+          <div>
+            <label className="block text-sm font-medium text-amber-300 mb-2">Email</label>
+            <input
+              type="email"
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+              className="w-full rounded-lg bg-black/50 border border-amber-400/30 text-white px-4 py-3 focus:outline-none focus:ring-2 focus:ring-amber-400"
+              placeholder="coach@example.com"
+              required
+            />
+          </div>
+          <div>
+            <label className="block text-sm font-medium text-amber-300 mb-2">Password</label>
+            <input
+              type="password"
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+              className="w-full rounded-lg bg-black/50 border border-amber-400/30 text-white px-4 py-3 focus:outline-none focus:ring-2 focus:ring-amber-400"
+              placeholder="••••••••"
+              required
+            />
+          </div>
+
+          {error && <p className="text-red-400 text-sm bg-red-950/30 border border-red-400/30 rounded-lg px-4 py-3">{error}</p>}
+
+          <button
+            type="submit"
+            disabled={isLoading}
+            className="w-full bg-gradient-to-r from-amber-400 via-amber-500 to-amber-600 hover:from-amber-500 hover:via-amber-600 hover:to-amber-700 text-black font-bold py-3 rounded-lg text-lg transition-all duration-300 transform hover:scale-105 shadow-2xl shadow-amber-400/25 disabled:opacity-60"
+          >
+            {isLoading ? (
+              <span className="flex items-center justify-center space-x-2">
+                <Loader2 className="h-5 w-5 animate-spin" />
+                <span>Signing In...</span>
+              </span>
+            ) : (
+              'Sign In'
+            )}
+          </button>
+        </form>
+      </div>
+    </div>
+  );
+};
+
+const AdminDashboardPage: React.FC<{ onLogout: () => void; onAuthExpired: () => void }> = ({ onLogout, onAuthExpired }) => {
+  const [reports, setReports] = useState<AssessmentRecord[]>([]);
+  const [searchName, setSearchName] = useState('');
+  const [fromDate, setFromDate] = useState('');
+  const [toDate, setToDate] = useState('');
+  const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState('');
+
+  const loadReports = async () => {
+    setIsLoading(true);
+    setError('');
+    try {
+      const params = new URLSearchParams();
+      if (searchName) params.set('q', searchName);
+      if (fromDate) params.set('from', fromDate);
+      if (toDate) params.set('to', toDate);
+
+      const response = await fetch(`/api/admin/reports?${params.toString()}`, { credentials: 'include' });
+      if (response.status === 401) {
+        onAuthExpired();
+        return;
+      }
+      if (!response.ok) {
+        throw new Error('Unable to load reports');
+      }
+      const payload = await response.json();
+      const data = Array.isArray(payload?.data) ? payload.data : payload;
+      setReports(Array.isArray(data) ? data : []);
+    } catch (dashError) {
+      setError((dashError as Error).message || 'Unable to load reports right now.');
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    loadReports();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  const formatDate = (value: string) => {
+    try {
+      const parsed = new Date(value);
+      return parsed.toLocaleString();
+    } catch {
+      return value;
+    }
+  };
+
+  const renderPdfLinks = (url?: string | null) => {
+    if (!url) {
+      return <span className="text-gray-500 text-sm">Not provided</span>;
+    }
+    return (
+      <div className="flex items-center space-x-3">
+        <a
+          href={url}
+          target="_blank"
+          rel="noreferrer"
+          className="inline-flex items-center text-amber-300 hover:text-amber-200 text-sm font-semibold"
+        >
+          <ExternalLink className="h-4 w-4 mr-1" />
+          View
+        </a>
+        <a
+          href={url}
+          download
+          className="inline-flex items-center text-amber-300 hover:text-amber-200 text-sm font-semibold"
+        >
+          <Download className="h-4 w-4 mr-1" />
+          Download
+        </a>
+      </div>
+    );
+  };
+
+  return (
+    <div className="min-h-screen bg-gradient-to-br from-black via-gray-900 to-black grain-texture py-12 px-4">
+      <div className="max-w-6xl mx-auto">
+        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between mb-8">
+          <div className="flex items-center space-x-3">
+            <ShieldCheck className="h-10 w-10 text-amber-400" />
+            <div>
+              <p className="text-sm text-amber-300 uppercase tracking-wide">Coach Portal</p>
+              <h1 className="text-3xl font-bold text-white">Assessment Reports</h1>
+            </div>
+          </div>
+          <button
+            onClick={onLogout}
+            className="mt-4 sm:mt-0 inline-flex items-center px-4 py-2 rounded-lg text-sm font-semibold bg-black border border-amber-400/40 text-amber-200 hover:bg-gray-900 transition-colors"
+          >
+            <LogOut className="h-4 w-4 mr-2" />
+            Logout
+          </button>
+        </div>
+
+        <div className="bg-gradient-to-br from-gray-900 to-black rounded-2xl shadow-2xl shadow-amber-400/10 border border-amber-400/20 p-6 mb-6">
+          <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+            <div className="md:col-span-2">
+              <label className="block text-sm font-medium text-amber-300 mb-2">Search by Name</label>
+              <input
+                type="text"
+                value={searchName}
+                onChange={(e) => setSearchName(e.target.value)}
+                placeholder="Type a name..."
+                className="w-full rounded-lg bg-black/50 border border-amber-400/30 text-white px-4 py-3 focus:outline-none focus:ring-2 focus:ring-amber-400"
+              />
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-amber-300 mb-2">From (Date)</label>
+              <input
+                type="date"
+                value={fromDate}
+                onChange={(e) => setFromDate(e.target.value)}
+                className="w-full rounded-lg bg-black/50 border border-amber-400/30 text-white px-4 py-3 focus:outline-none focus:ring-2 focus:ring-amber-400"
+              />
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-amber-300 mb-2">To (Date)</label>
+              <input
+                type="date"
+                value={toDate}
+                onChange={(e) => setToDate(e.target.value)}
+                className="w-full rounded-lg bg-black/50 border border-amber-400/30 text-white px-4 py-3 focus:outline-none focus:ring-2 focus:ring-amber-400"
+              />
+            </div>
+          </div>
+          <div className="mt-4 flex items-center justify-between">
+            {error ? <p className="text-red-400 text-sm">{error}</p> : <span className="text-gray-400 text-sm">Showing latest submissions</span>}
+            <div className="flex items-center space-x-3">
+              <button
+                onClick={() => {
+                  setFromDate('');
+                  setToDate('');
+                  setSearchName('');
+                }}
+                className="px-4 py-2 rounded-lg text-sm font-semibold bg-black border border-amber-400/40 text-amber-200 hover:bg-gray-900 transition-colors"
+              >
+                Clear
+              </button>
+              <button
+                onClick={loadReports}
+                disabled={isLoading}
+                className="inline-flex items-center px-4 py-2 rounded-lg text-sm font-semibold bg-gradient-to-r from-amber-400 to-amber-500 text-black hover:from-amber-500 hover:to-amber-600 transition-all disabled:opacity-60"
+              >
+                {isLoading ? (
+                  <>
+                    <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                    Refreshing
+                  </>
+                ) : (
+                  'Refresh'
+                )}
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <div className="bg-gradient-to-br from-gray-900 to-black rounded-2xl border border-amber-400/20 shadow-2xl shadow-amber-400/10 overflow-hidden">
+          <div className="overflow-x-auto">
+            <table className="w-full min-w-full">
+              <thead>
+                <tr className="bg-gradient-to-r from-amber-400/20 to-amber-500/20 border-b border-amber-400/30">
+                  <th className="px-4 py-3 text-left text-amber-300 font-semibold text-sm">Name</th>
+                  <th className="px-4 py-3 text-left text-amber-300 font-semibold text-sm">Email</th>
+                  <th className="px-4 py-3 text-left text-amber-300 font-semibold text-sm">Score</th>
+                  <th className="px-4 py-3 text-left text-amber-300 font-semibold text-sm">Date</th>
+                  <th className="px-4 py-3 text-left text-amber-300 font-semibold text-sm">Client Report</th>
+                  <th className="px-4 py-3 text-left text-amber-300 font-semibold text-sm">Coach Report</th>
+                </tr>
+              </thead>
+              <tbody>
+                {reports.length === 0 && (
+                  <tr>
+                    <td colSpan={6} className="px-4 py-6 text-center text-gray-400">
+                      {isLoading ? 'Loading reports...' : 'No submissions yet.'}
+                    </td>
+                  </tr>
+                )}
+                {reports.map((report) => (
+                  <tr key={report.id} className="border-b border-amber-400/10 hover:bg-gradient-to-r hover:from-amber-400/5 hover:to-amber-500/5 transition-all">
+                    <td className="px-4 py-3 text-white font-semibold">{report.name}</td>
+                    <td className="px-4 py-3 text-gray-300 text-sm">{report.email}</td>
+                    <td className="px-4 py-3 text-amber-200 font-bold">{report.score ?? '—'}</td>
+                    <td className="px-4 py-3 text-gray-300 text-sm whitespace-nowrap">{formatDate(report.created_at)}</td>
+                    <td className="px-4 py-3">{renderPdfLinks(report.client_pdf_url)}</td>
+                    <td className="px-4 py-3">{renderPdfLinks(report.coach_pdf_url)}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
           </div>
         </div>
       </div>
@@ -750,7 +1080,9 @@ const AboutPage: React.FC = () => {
 };
 
 function App() {
-  const [currentPage, setCurrentPage] = useState('home');
+  const [currentPage, setCurrentPage] = useState<Page>('home');
+  const [isAdminAuthed, setIsAdminAuthed] = useState(false);
+  const [isCheckingSession, setIsCheckingSession] = useState(true);
 
   // Check URL parameters on component mount
   useEffect(() => {
@@ -759,7 +1091,57 @@ function App() {
     if (pageParam === 'success') {
       setCurrentPage('success');
     }
+    if (pageParam === 'admin') {
+      setCurrentPage('login');
+    }
   }, []);
+
+  // Verify existing admin session on load
+  useEffect(() => {
+    const checkSession = async () => {
+      try {
+        const response = await fetch('/api/admin/session', { credentials: 'include' });
+        if (response.ok) {
+          setIsAdminAuthed(true);
+          if (currentPage === 'login') {
+            setCurrentPage('admin');
+          }
+        } else {
+          setIsAdminAuthed(false);
+          if (currentPage === 'admin') {
+            setCurrentPage('login');
+          }
+        }
+      } catch (error) {
+        setIsAdminAuthed(false);
+      } finally {
+        setIsCheckingSession(false);
+      }
+    };
+
+    checkSession();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  const handleLoginSuccess = () => {
+    setIsAdminAuthed(true);
+    setCurrentPage('admin');
+  };
+
+  const handleLogout = async () => {
+    try {
+      await fetch('/api/admin/logout', { method: 'POST', credentials: 'include' });
+    } catch (error) {
+      // ignore logout errors
+    }
+    setIsAdminAuthed(false);
+    setCurrentPage('home');
+  };
+
+  const handleAuthExpired = () => {
+    setIsAdminAuthed(false);
+    setCurrentPage('login');
+  };
 
   const renderPage = () => {
     switch (currentPage) {
@@ -771,6 +1153,14 @@ function App() {
         return <SuccessPage onPageChange={setCurrentPage} />;
       case 'about':
         return <AboutPage />;
+      case 'login':
+        return <AdminLoginPage onLoginSuccess={handleLoginSuccess} />;
+      case 'admin':
+        return isAdminAuthed ? (
+          <AdminDashboardPage onLogout={handleLogout} onAuthExpired={handleAuthExpired} />
+        ) : (
+          <AdminLoginPage onLoginSuccess={handleLoginSuccess} />
+        );
       default:
         return <HomePage onPageChange={setCurrentPage} />;
     }
@@ -778,8 +1168,8 @@ function App() {
 
   return (
     <div className="min-h-screen">
-      <Navigation currentPage={currentPage} onPageChange={setCurrentPage} />
-      {renderPage()}
+      <Navigation currentPage={currentPage} onPageChange={setCurrentPage} isAdminAuthed={isAdminAuthed} />
+      {!isCheckingSession && renderPage()}
     </div>
   );
 }
