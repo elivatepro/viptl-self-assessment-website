@@ -58,10 +58,41 @@ export default async function handler(req, res) {
     resolvedCoachUrl = url;
   }
 
+  // Upsert behavior: if a record with this email exists, fill only missing fields; otherwise insert.
+  const { data: existingRows, error: selectError } = await supabaseAdmin
+    .from('assessments')
+    .select('id,name,email,score,client_pdf_url,coach_pdf_url')
+    .eq('email', email)
+    .order('created_at', { ascending: false })
+    .limit(1);
+
+  if (selectError) {
+    return sendJson(res, 500, { error: 'Failed to check existing records' });
+  }
+
+  const existing = existingRows && existingRows[0];
+  const safeScore = Number.isNaN(parsedScore) ? null : parsedScore;
+
+  if (existing) {
+    const nextPayload = {
+      name: existing.name || name,
+      email,
+      score: existing.score ?? safeScore,
+      client_pdf_url: existing.client_pdf_url || resolvedClientUrl,
+      coach_pdf_url: existing.coach_pdf_url || resolvedCoachUrl,
+    };
+
+    const { error: updateError } = await supabaseAdmin.from('assessments').update(nextPayload).eq('id', existing.id);
+    if (updateError) {
+      return sendJson(res, 500, { error: 'Failed to update record' });
+    }
+    return sendJson(res, 200, { ok: true, updated: true });
+  }
+
   const { error } = await supabaseAdmin.from('assessments').insert({
     name,
     email,
-    score: Number.isNaN(parsedScore) ? null : parsedScore,
+    score: safeScore,
     client_pdf_url: resolvedClientUrl,
     coach_pdf_url: resolvedCoachUrl,
   });

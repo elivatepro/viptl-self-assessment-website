@@ -773,16 +773,22 @@ const AdminDashboardPage: React.FC<{ onLogout: () => void; onAuthExpired: () => 
     }
   };
 
+  const asProxyUrl = (url?: string | null) => {
+    if (!url) return null;
+    return `/api/proxy/pdf?url=${encodeURIComponent(url)}`;
+  };
+
   const renderPdfLinks = (url?: string | null, label?: string) => {
     if (!url) {
       return <span className="text-gray-500 text-sm">Not provided</span>;
     }
+    const proxied = asProxyUrl(url);
     return (
       <div className="flex items-center space-x-3">
         <button
           type="button"
           onClick={() => {
-            setPreviewUrl(url);
+            setPreviewUrl(proxied || url);
             setPreviewTitle(label || 'Report Preview');
           }}
           className="inline-flex items-center text-amber-300 hover:text-amber-200 text-sm font-semibold focus:outline-none"
@@ -884,70 +890,72 @@ const AdminDashboardPage: React.FC<{ onLogout: () => void; onAuthExpired: () => 
           </div>
         </div>
 
-        <div className="bg-gradient-to-br from-gray-900 to-black rounded-2xl border border-amber-400/20 shadow-2xl shadow-amber-400/10 overflow-hidden">
-          <div className="overflow-x-auto">
-            <table className="w-full min-w-full">
-              <thead>
-                <tr className="bg-gradient-to-r from-amber-400/20 to-amber-500/20 border-b border-amber-400/30">
-                  <th className="px-4 py-3 text-left text-amber-300 font-semibold text-sm">Name</th>
-                  <th className="px-4 py-3 text-left text-amber-300 font-semibold text-sm">Email</th>
-                  <th className="px-4 py-3 text-left text-amber-300 font-semibold text-sm">Score</th>
-                  <th className="px-4 py-3 text-left text-amber-300 font-semibold text-sm">Date</th>
-                  <th className="px-4 py-3 text-left text-amber-300 font-semibold text-sm">Client Report</th>
-                  <th className="px-4 py-3 text-left text-amber-300 font-semibold text-sm">Coach Report</th>
-                </tr>
-              </thead>
-              <tbody>
-                {reports.length === 0 && (
-                  <tr>
-                    <td colSpan={6} className="px-4 py-6 text-center text-gray-400">
-                      {isLoading ? 'Loading reports...' : 'No submissions yet.'}
-                    </td>
-                  </tr>
-                )}
-                {reports.map((report) => (
-                  <tr key={report.id} className="border-b border-amber-400/10 hover:bg-gradient-to-r hover:from-amber-400/5 hover:to-amber-500/5 transition-all">
-                    <td className="px-4 py-3 text-white font-semibold">{report.name}</td>
-                    <td className="px-4 py-3 text-gray-300 text-sm">{report.email}</td>
-                    <td className="px-4 py-3 text-amber-200 font-bold">{report.score ?? '—'}</td>
-                    <td className="px-4 py-3 text-gray-300 text-sm whitespace-nowrap">{formatDate(report.created_at)}</td>
-                    <td className="px-4 py-3">{renderPdfLinks(report.client_pdf_url, 'Client Report')}</td>
-                    <td className="px-4 py-3">{renderPdfLinks(report.coach_pdf_url, 'Coach Report')}</td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
+        <div className="space-y-4">
+          {isLoading && reports.length === 0 && (
+            <div className="bg-gradient-to-br from-gray-900 to-black rounded-2xl border border-amber-400/20 shadow-2xl shadow-amber-400/10 p-6 text-center text-gray-300">
+              Loading reports...
+            </div>
+          )}
 
-          {previewUrl && (
-            <div className="fixed inset-0 z-50 bg-black/80 backdrop-blur-sm flex items-center justify-center px-4">
-              <div className="bg-gradient-to-br from-gray-900 to-black border border-amber-400/30 rounded-2xl shadow-2xl shadow-amber-400/20 max-w-5xl w-full h-[80vh] relative overflow-hidden">
-                <div className="flex items-center justify-between px-6 py-4 border-b border-amber-400/20">
-                  <div>
-                    <p className="text-xs uppercase tracking-wide text-amber-300">Previewing</p>
-                    <h3 className="text-lg font-bold text-white">{previewTitle}</h3>
-                  </div>
-                  <button
-                    type="button"
-                    onClick={() => setPreviewUrl(null)}
-                    className="text-amber-200 hover:text-amber-100 bg-black/50 border border-amber-400/30 rounded-lg px-3 py-2 flex items-center"
-                  >
-                    <X className="h-4 w-4 mr-1" />
-                    Close
-                  </button>
+          {!isLoading && reports.length === 0 && (
+            <div className="bg-gradient-to-br from-gray-900 to-black rounded-2xl border border-amber-400/20 shadow-2xl shadow-amber-400/10 p-6 text-center text-gray-300">
+              No submissions yet.
+            </div>
+          )}
+
+          {reports.map((report) => (
+            <div
+              key={report.id}
+              className="bg-gradient-to-r from-gray-900/80 via-gray-900 to-black rounded-2xl border border-amber-400/20 shadow-2xl shadow-amber-400/10 p-5 flex flex-col md:flex-row md:items-center md:justify-between gap-4 hover:border-amber-400/40 transition-all"
+            >
+              <div className="space-y-1">
+                <div className="text-white font-bold text-lg">{report.name}</div>
+                <div className="text-gray-300 text-sm">{report.email}</div>
+                <div className="text-amber-200 font-semibold">Score: {report.score ?? '—'}</div>
+                <div className="text-gray-400 text-xs uppercase tracking-wide">{formatDate(report.created_at)}</div>
+              </div>
+              <div className="flex flex-col sm:flex-row sm:items-center gap-3">
+                <div className="bg-black/40 border border-amber-400/20 rounded-xl px-4 py-3">
+                  <p className="text-xs uppercase tracking-wide text-amber-300 mb-2">Client Report</p>
+                  {renderPdfLinks(report.client_pdf_url, 'Client Report')}
                 </div>
-                <div className="h-full">
-                  <iframe
-                    title="Report Preview"
-                    src={previewUrl}
-                    className="w-full h-full"
-                    allow="fullscreen"
-                  />
+                <div className="bg-black/40 border border-amber-400/20 rounded-xl px-4 py-3">
+                  <p className="text-xs uppercase tracking-wide text-amber-300 mb-2">Coach Report</p>
+                  {renderPdfLinks(report.coach_pdf_url, 'Coach Report')}
                 </div>
               </div>
             </div>
-          )}
+          ))}
         </div>
+
+        {previewUrl && (
+          <div className="fixed inset-0 z-50 bg-black/80 backdrop-blur-sm flex items-center justify-center px-4">
+            <div className="bg-gradient-to-br from-gray-900 to-black border border-amber-400/30 rounded-2xl shadow-2xl shadow-amber-400/20 max-w-5xl w-full h-[80vh] relative overflow-hidden">
+              <div className="flex items-center justify-between px-6 py-4 border-b border-amber-400/20">
+                <div>
+                  <p className="text-xs uppercase tracking-wide text-amber-300">Previewing</p>
+                  <h3 className="text-lg font-bold text-white">{previewTitle}</h3>
+                </div>
+                <button
+                  type="button"
+                  onClick={() => setPreviewUrl(null)}
+                  className="text-amber-200 hover:text-amber-100 bg-black/50 border border-amber-400/30 rounded-lg px-3 py-2 flex items-center"
+                >
+                  <X className="h-4 w-4 mr-1" />
+                  Close
+                </button>
+              </div>
+              <div className="h-full">
+                <iframe
+                  title="Report Preview"
+                  src={previewUrl}
+                  className="w-full h-full"
+                  allow="fullscreen"
+                />
+              </div>
+            </div>
+          </div>
+        )}
       </div>
     </div>
   );
