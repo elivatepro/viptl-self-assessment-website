@@ -18,10 +18,9 @@ interface AssessmentRecord {
 interface NavigationProps {
   currentPage: Page;
   onPageChange: (page: Page) => void;
-  isAdminAuthed: boolean;
 }
 
-const Navigation: React.FC<NavigationProps> = ({ currentPage, onPageChange, isAdminAuthed }) => {
+const Navigation: React.FC<NavigationProps> = ({ currentPage, onPageChange }) => {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
 
   return (
@@ -66,16 +65,6 @@ const Navigation: React.FC<NavigationProps> = ({ currentPage, onPageChange, isAd
                 }`}
               >
                 About
-              </button>
-              <button
-                onClick={() => onPageChange(isAdminAuthed ? 'admin' : 'login')}
-                className={`px-4 py-2 rounded-lg text-sm font-semibold transition-all duration-300 ${
-                  currentPage === 'login' || currentPage === 'admin' 
-                    ? 'text-black bg-gradient-to-r from-amber-300 to-amber-400 shadow-lg shadow-amber-400/25' 
-                    : 'text-amber-300 hover:text-black hover:bg-gradient-to-r hover:from-amber-300 hover:to-amber-400 hover:shadow-lg hover:shadow-amber-400/25'
-                }`}
-              >
-                Coach
               </button>
             </div>
           </div>
@@ -165,19 +154,6 @@ const Navigation: React.FC<NavigationProps> = ({ currentPage, onPageChange, isAd
                 }`}
               >
                 About
-              </button>
-              <button
-                onClick={() => {
-                  onPageChange(isAdminAuthed ? 'admin' : 'login');
-                  setIsMobileMenuOpen(false);
-                }}
-                className={`block w-full text-left px-3 py-2 rounded-md text-base font-medium transition-all duration-300 ${
-                  currentPage === 'login' || currentPage === 'admin'
-                    ? 'text-black bg-gradient-to-r from-amber-300 to-amber-400' 
-                    : 'text-amber-300 hover:text-black hover:bg-gradient-to-r hover:from-amber-300 hover:to-amber-400'
-                }`}
-              >
-                Coach
               </button>
             </div>
           </div>
@@ -1260,8 +1236,8 @@ function App() {
 
   return (
     <div className="min-h-screen">
-      <Navigation currentPage={currentPage} onPageChange={setCurrentPage} isAdminAuthed={isAdminAuthed} />
-      {!isCheckingSession && renderPage()}
+      <Navigation currentPage={currentPage} onPageChange={setCurrentPage} />
+      {renderPage()}
     </div>
   );
 }
