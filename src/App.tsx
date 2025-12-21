@@ -729,6 +729,8 @@ const AdminDashboardPage: React.FC<{ onLogout: () => void; onAuthExpired: () => 
   const [toDate, setToDate] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState('');
+  const [previewUrl, setPreviewUrl] = useState<string | null>(null);
+  const [previewTitle, setPreviewTitle] = useState<string>('');
 
   const loadReports = async () => {
     setIsLoading(true);
@@ -771,21 +773,23 @@ const AdminDashboardPage: React.FC<{ onLogout: () => void; onAuthExpired: () => 
     }
   };
 
-  const renderPdfLinks = (url?: string | null) => {
+  const renderPdfLinks = (url?: string | null, label?: string) => {
     if (!url) {
       return <span className="text-gray-500 text-sm">Not provided</span>;
     }
     return (
       <div className="flex items-center space-x-3">
-        <a
-          href={url}
-          target="_blank"
-          rel="noreferrer"
-          className="inline-flex items-center text-amber-300 hover:text-amber-200 text-sm font-semibold"
+        <button
+          type="button"
+          onClick={() => {
+            setPreviewUrl(url);
+            setPreviewTitle(label || 'Report Preview');
+          }}
+          className="inline-flex items-center text-amber-300 hover:text-amber-200 text-sm font-semibold focus:outline-none"
         >
           <ExternalLink className="h-4 w-4 mr-1" />
           View
-        </a>
+        </button>
         <a
           href={url}
           download
@@ -907,13 +911,42 @@ const AdminDashboardPage: React.FC<{ onLogout: () => void; onAuthExpired: () => 
                     <td className="px-4 py-3 text-gray-300 text-sm">{report.email}</td>
                     <td className="px-4 py-3 text-amber-200 font-bold">{report.score ?? '—'}</td>
                     <td className="px-4 py-3 text-gray-300 text-sm whitespace-nowrap">{formatDate(report.created_at)}</td>
-                    <td className="px-4 py-3">{renderPdfLinks(report.client_pdf_url)}</td>
-                    <td className="px-4 py-3">{renderPdfLinks(report.coach_pdf_url)}</td>
+                    <td className="px-4 py-3">{renderPdfLinks(report.client_pdf_url, 'Client Report')}</td>
+                    <td className="px-4 py-3">{renderPdfLinks(report.coach_pdf_url, 'Coach Report')}</td>
                   </tr>
                 ))}
               </tbody>
             </table>
           </div>
+
+          {previewUrl && (
+            <div className="fixed inset-0 z-50 bg-black/80 backdrop-blur-sm flex items-center justify-center px-4">
+              <div className="bg-gradient-to-br from-gray-900 to-black border border-amber-400/30 rounded-2xl shadow-2xl shadow-amber-400/20 max-w-5xl w-full h-[80vh] relative overflow-hidden">
+                <div className="flex items-center justify-between px-6 py-4 border-b border-amber-400/20">
+                  <div>
+                    <p className="text-xs uppercase tracking-wide text-amber-300">Previewing</p>
+                    <h3 className="text-lg font-bold text-white">{previewTitle}</h3>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={() => setPreviewUrl(null)}
+                    className="text-amber-200 hover:text-amber-100 bg-black/50 border border-amber-400/30 rounded-lg px-3 py-2 flex items-center"
+                  >
+                    <X className="h-4 w-4 mr-1" />
+                    Close
+                  </button>
+                </div>
+                <div className="h-full">
+                  <iframe
+                    title="Report Preview"
+                    src={previewUrl}
+                    className="w-full h-full"
+                    allow="fullscreen"
+                  />
+                </div>
+              </div>
+            </div>
+          )}
         </div>
       </div>
     </div>
