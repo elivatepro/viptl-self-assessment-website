@@ -91,6 +91,38 @@ const Navigation: React.FC<NavigationProps> = ({ currentPage, onPageChange, isAd
           </div>
         </div>
 
+        {deleteTarget && (
+          <div className="fixed inset-0 z-50 bg-black/80 backdrop-blur-sm flex items-center justify-center px-4">
+            <div className="bg-gradient-to-br from-gray-900 to-black border border-red-400/30 rounded-2xl shadow-2xl shadow-red-400/20 max-w-md w-full p-6 space-y-4">
+              <div>
+                <p className="text-xs uppercase tracking-wide text-red-300">Confirm delete</p>
+                <h3 className="text-xl font-bold text-white mt-1">Delete this record?</h3>
+                <p className="text-gray-300 text-sm mt-2">
+                  This will remove the submission for <span className="font-semibold text-amber-200">{deleteTarget.name}</span>.
+                </p>
+              </div>
+              <div className="flex items-center justify-end gap-3">
+                <button
+                  type="button"
+                  onClick={() => setDeleteTarget(null)}
+                  className="px-4 py-2 rounded-lg text-sm font-semibold bg-black/50 border border-amber-400/30 text-amber-200 hover:bg-gray-900 transition-colors"
+                  disabled={isDeleting}
+                >
+                  Cancel
+                </button>
+                <button
+                  type="button"
+                  onClick={() => handleDelete(deleteTarget.id)}
+                  className="px-4 py-2 rounded-lg text-sm font-semibold bg-gradient-to-r from-red-400 to-red-500 text-black hover:from-red-500 hover:to-red-600 transition-all disabled:opacity-60"
+                  disabled={isDeleting}
+                >
+                  {isDeleting ? 'Deleting...' : 'Delete'}
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
+
         {/* Mobile Navigation */}
         {isMobileMenuOpen && (
           <div className="md:hidden border-t border-amber-400/20">
@@ -729,6 +761,8 @@ const AdminDashboardPage: React.FC<{ onLogout: () => void; onAuthExpired: () => 
   const [toDate, setToDate] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState('');
+  const [deleteTarget, setDeleteTarget] = useState<AssessmentRecord | null>(null);
+  const [isDeleting, setIsDeleting] = useState(false);
   const [previewUrl, setPreviewUrl] = useState<string | null>(null);
   const [previewTitle, setPreviewTitle] = useState<string>('');
 
@@ -756,6 +790,33 @@ const AdminDashboardPage: React.FC<{ onLogout: () => void; onAuthExpired: () => 
       setError((dashError as Error).message || 'Unable to load reports right now.');
     } finally {
       setIsLoading(false);
+    }
+  };
+
+  const handleDelete = async (id: string) => {
+    setIsDeleting(true);
+    try {
+      const response = await fetch('/api/admin/report-delete', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        credentials: 'include',
+        body: JSON.stringify({ id }),
+      });
+      if (response.status === 401) {
+        onAuthExpired();
+        return;
+      }
+      if (!response.ok) {
+        throw new Error('Failed to delete');
+      }
+      setReports((prev) => prev.filter((r) => r.id !== id));
+      setDeleteTarget(null);
+    } catch (err) {
+      // eslint-disable-next-line no-console
+      console.error(err);
+      alert('Unable to delete this record right now.');
+    } finally {
+      setIsDeleting(false);
     }
   };
 
@@ -906,6 +967,13 @@ const AdminDashboardPage: React.FC<{ onLogout: () => void; onAuthExpired: () => 
                   <p className="text-xs uppercase tracking-wide text-amber-300 mb-2">Coach Report</p>
                   {renderPdfLinks(report.coach_pdf_url)}
                 </div>
+                <button
+                  type="button"
+                  onClick={() => setDeleteTarget(report)}
+                  className="ml-auto text-red-300 hover:text-red-200 text-sm font-semibold bg-black/40 border border-red-400/30 rounded-lg px-4 py-2 transition-colors"
+                >
+                  Delete
+                </button>
               </div>
             </div>
           ))}
