@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { ArrowRight, CheckCircle, Users, Target, Heart, Brain, Star, Calendar, Menu, X, ShieldCheck, LogOut, Loader2, Download, ExternalLink } from 'lucide-react';
+import { ArrowRight, CheckCircle, Users, Target, Heart, Brain, Star, Calendar, Menu, X, ShieldCheck, LogOut, Loader2, Download } from 'lucide-react';
 import TypewriterText from './components/TypewriterText';
 import newMrWayneImage from './assets/new mr wayne.jpeg';
 
@@ -739,8 +739,6 @@ const AdminDashboardPage: React.FC<{ onLogout: () => void; onAuthExpired: () => 
   const [error, setError] = useState('');
   const [deleteTarget, setDeleteTarget] = useState<AssessmentRecord | null>(null);
   const [isDeleting, setIsDeleting] = useState(false);
-  const [previewUrl, setPreviewUrl] = useState<string | null>(null);
-  const [previewTitle, setPreviewTitle] = useState<string>('');
 
   const loadReports = async () => {
     setIsLoading(true);
@@ -955,34 +953,6 @@ const AdminDashboardPage: React.FC<{ onLogout: () => void; onAuthExpired: () => 
           ))}
         </div>
 
-        {previewUrl && (
-          <div className="fixed inset-0 z-50 bg-black/80 backdrop-blur-sm flex items-center justify-center px-4">
-            <div className="bg-gradient-to-br from-gray-900 to-black border border-amber-400/30 rounded-2xl shadow-2xl shadow-amber-400/20 max-w-5xl w-full h-[80vh] relative overflow-hidden">
-              <div className="flex items-center justify-between px-6 py-4 border-b border-amber-400/20">
-                <div>
-                  <p className="text-xs uppercase tracking-wide text-amber-300">Previewing</p>
-                  <h3 className="text-lg font-bold text-white">{previewTitle}</h3>
-                </div>
-                <button
-                  type="button"
-                  onClick={() => setPreviewUrl(null)}
-                  className="text-amber-200 hover:text-amber-100 bg-black/50 border border-amber-400/30 rounded-lg px-3 py-2 flex items-center"
-                >
-                  <X className="h-4 w-4 mr-1" />
-                  Close
-                </button>
-              </div>
-              <div className="h-full">
-                <iframe
-                  title="Report Preview"
-                  src={previewUrl}
-                  className="w-full h-full"
-                  allow="fullscreen"
-                />
-              </div>
-            </div>
-          </div>
-        )}
       </div>
     </div>
   );
@@ -1150,7 +1120,6 @@ const AboutPage: React.FC = () => {
 function App() {
   const [currentPage, setCurrentPage] = useState<Page>('home');
   const [isAdminAuthed, setIsAdminAuthed] = useState(false);
-  const [isCheckingSession, setIsCheckingSession] = useState(true);
 
   // Check URL parameters on component mount
   useEffect(() => {
@@ -1162,33 +1131,6 @@ function App() {
     if (pageParam === 'admin') {
       setCurrentPage('login');
     }
-  }, []);
-
-  // Verify existing admin session on load
-  useEffect(() => {
-    const checkSession = async () => {
-      try {
-        const response = await fetch('/api/admin/session', { credentials: 'include' });
-        if (response.ok) {
-          setIsAdminAuthed(true);
-          if (currentPage === 'login') {
-            setCurrentPage('admin');
-          }
-        } else {
-          setIsAdminAuthed(false);
-          if (currentPage === 'admin') {
-            setCurrentPage('login');
-          }
-        }
-      } catch (error) {
-        setIsAdminAuthed(false);
-      } finally {
-        setIsCheckingSession(false);
-      }
-    };
-
-    checkSession();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   const handleLoginSuccess = () => {
