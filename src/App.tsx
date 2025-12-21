@@ -773,29 +773,12 @@ const AdminDashboardPage: React.FC<{ onLogout: () => void; onAuthExpired: () => 
     }
   };
 
-  const asProxyUrl = (url?: string | null) => {
-    if (!url) return null;
-    return `/api/proxy/pdf?url=${encodeURIComponent(url)}`;
-  };
-
-  const renderPdfLinks = (url?: string | null, label?: string) => {
+  const renderPdfLinks = (url?: string | null) => {
     if (!url) {
       return <span className="text-gray-500 text-sm">Not provided</span>;
     }
-    const proxied = asProxyUrl(url);
     return (
       <div className="flex items-center space-x-3">
-        <button
-          type="button"
-          onClick={() => {
-            setPreviewUrl(proxied || url);
-            setPreviewTitle(label || 'Report Preview');
-          }}
-          className="inline-flex items-center text-amber-300 hover:text-amber-200 text-sm font-semibold focus:outline-none"
-        >
-          <ExternalLink className="h-4 w-4 mr-1" />
-          View
-        </button>
         <a
           href={url}
           download
@@ -917,11 +900,11 @@ const AdminDashboardPage: React.FC<{ onLogout: () => void; onAuthExpired: () => 
               <div className="flex flex-col sm:flex-row sm:items-center gap-3">
                 <div className="bg-black/40 border border-amber-400/20 rounded-xl px-4 py-3">
                   <p className="text-xs uppercase tracking-wide text-amber-300 mb-2">Client Report</p>
-                  {renderPdfLinks(report.client_pdf_url, 'Client Report')}
+                  {renderPdfLinks(report.client_pdf_url)}
                 </div>
                 <div className="bg-black/40 border border-amber-400/20 rounded-xl px-4 py-3">
                   <p className="text-xs uppercase tracking-wide text-amber-300 mb-2">Coach Report</p>
-                  {renderPdfLinks(report.coach_pdf_url, 'Coach Report')}
+                  {renderPdfLinks(report.coach_pdf_url)}
                 </div>
               </div>
             </div>
