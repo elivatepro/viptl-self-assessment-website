@@ -1,7 +1,7 @@
 import { supabaseAdmin } from '../_lib/supabase.js';
 import { requireEnv } from '../_lib/env.js';
 import { badRequest, methodNotAllowed, parseJsonBody, sendJson, unauthorized } from '../_lib/http.js';
-import { uploadPdfFromBase64 } from '../_lib/storage.js';
+import { uploadPdfFromBase64, uploadPdfFromUrl } from '../_lib/storage.js';
 
 const webhookSecret = requireEnv('WEBHOOK_SECRET');
 
@@ -38,20 +38,41 @@ export default async function handler(req, res) {
 
   const parsedScore = typeof score === 'number' ? score : score ? Number(score) : null;
 
-  let resolvedClientUrl = clientPdfUrl || null;
-  let resolvedCoachUrl = coachPdfUrl || null;
+  const resolvePdfUpload = async ({ base64, url, prefix }) => {
+    if (base64) {
+      const result = await uploadPdfFromBase64(base64, prefix);
+      if (!result.error) return result;
+      if (!url) return result;
+    }
 
-  // Prefer explicit URLs; fall back to base64 uploads when provided.
-  if (!resolvedClientUrl && clientPdfBase64) {
-    const { url, error } = await uploadPdfFromBase64(clientPdfBase64, 'client');
+    if (url) {
+      return uploadPdfFromUrl(url, prefix);
+    }
+
+    return { url: null };
+  };
+
+  let resolvedClientUrl = null;
+  let resolvedCoachUrl = null;
+
+  if (clientPdfBase64 || clientPdfUrl) {
+    const { url, error } = await resolvePdfUpload({
+      base64: clientPdfBase64,
+      url: clientPdfUrl,
+      prefix: 'client',
+    });
     if (error) {
       return badRequest(res, `Client PDF upload failed: ${error}`);
     }
     resolvedClientUrl = url;
   }
 
-  if (!resolvedCoachUrl && coachPdfBase64) {
-    const { url, error } = await uploadPdfFromBase64(coachPdfBase64, 'coach');
+  if (coachPdfBase64 || coachPdfUrl) {
+    const { url, error } = await resolvePdfUpload({
+      base64: coachPdfBase64,
+      url: coachPdfUrl,
+      prefix: 'coach',
+    });
     if (error) {
       return badRequest(res, `Coach PDF upload failed: ${error}`);
     }
@@ -78,8 +99,8 @@ export default async function handler(req, res) {
       name: existing.name || name,
       email,
       score: existing.score ?? safeScore,
-      client_pdf_url: existing.client_pdf_url || resolvedClientUrl,
-      coach_pdf_url: existing.coach_pdf_url || resolvedCoachUrl,
+      client_pdf_url: resolvedClientUrl || existing.client_pdf_url,
+      coach_pdf_url: resolvedCoachUrl || existing.coach_pdf_url,
     };
 
     const { error: updateError } = await supabaseAdmin.from('assessments').update(nextPayload).eq('id', existing.id);

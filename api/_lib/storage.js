@@ -10,18 +10,7 @@ const generatePath = (prefix) => {
   return `${prefix || 'report'}-${Date.now()}-${rand}.pdf`;
 };
 
-export const uploadPdfFromBase64 = async (base64String, prefix = 'report') => {
-  if (!base64String || typeof base64String !== 'string') {
-    return { error: 'Missing base64 data' };
-  }
-
-  let buffer;
-  try {
-    buffer = Buffer.from(base64String, 'base64');
-  } catch (error) {
-    return { error: 'Invalid base64 encoding' };
-  }
-
+const uploadPdfBuffer = async (buffer, prefix = 'report') => {
   if (!buffer || buffer.length === 0) {
     return { error: 'Empty file' };
   }
@@ -51,4 +40,54 @@ export const uploadPdfFromBase64 = async (base64String, prefix = 'report') => {
   }
 
   return { url: data.publicUrl };
+};
+
+export const uploadPdfFromBase64 = async (base64String, prefix = 'report') => {
+  if (!base64String || typeof base64String !== 'string') {
+    return { error: 'Missing base64 data' };
+  }
+
+  let buffer;
+  try {
+    const normalized = base64String.startsWith('data:') && base64String.includes(',')
+      ? base64String.substring(base64String.indexOf(',') + 1)
+      : base64String.trim();
+    buffer = Buffer.from(normalized, 'base64');
+  } catch (error) {
+    return { error: 'Invalid base64 encoding' };
+  }
+
+  return uploadPdfBuffer(buffer, prefix);
+};
+
+export const uploadPdfFromUrl = async (url, prefix = 'report') => {
+  if (!url || typeof url !== 'string') {
+    return { error: 'Missing URL' };
+  }
+
+  let response;
+  try {
+    response = await fetch(url);
+  } catch (error) {
+    return { error: 'Could not download file' };
+  }
+
+  if (!response?.ok) {
+    return { error: `Download failed (${response?.status || 'unknown status'})` };
+  }
+
+  const contentType = response.headers?.get('content-type') || '';
+  if (contentType && !contentType.toLowerCase().includes('pdf') && contentType !== 'application/octet-stream') {
+    return { error: 'Downloaded file is not a PDF' };
+  }
+
+  let buffer;
+  try {
+    const arrayBuffer = await response.arrayBuffer();
+    buffer = Buffer.from(arrayBuffer);
+  } catch (error) {
+    return { error: 'Failed to read downloaded file' };
+  }
+
+  return uploadPdfBuffer(buffer, prefix);
 };
