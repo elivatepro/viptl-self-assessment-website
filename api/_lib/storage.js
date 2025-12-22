@@ -31,14 +31,20 @@ const uploadPdfBuffer = async (buffer, prefix = 'report') => {
     });
 
   if (uploadError) {
-    return { error: 'Upload failed' };
+    // eslint-disable-next-line no-console
+    console.error('[storage] Upload failed:', uploadError);
+    return { error: `Upload failed: ${uploadError.message || uploadError}` };
   }
 
   const { data } = supabaseAdmin.storage.from(bucket).getPublicUrl(path);
   if (!data?.publicUrl) {
+    // eslint-disable-next-line no-console
+    console.error('[storage] Could not get public URL for path:', path);
     return { error: 'Could not get public URL' };
   }
 
+  // eslint-disable-next-line no-console
+  console.log('[storage] Upload successful. Path:', path, 'Size:', buffer.length, 'bytes. Public URL:', data.publicUrl);
   return { url: data.publicUrl };
 };
 
@@ -65,19 +71,31 @@ export const uploadPdfFromUrl = async (url, prefix = 'report') => {
     return { error: 'Missing URL' };
   }
 
+  // eslint-disable-next-line no-console
+  console.log('[storage] Downloading PDF from URL:', url);
+
   let response;
   try {
     response = await fetch(url);
   } catch (error) {
-    return { error: 'Could not download file' };
+    // eslint-disable-next-line no-console
+    console.error('[storage] Download error:', error);
+    return { error: `Could not download file: ${error.message}` };
   }
 
   if (!response?.ok) {
+    // eslint-disable-next-line no-console
+    console.error('[storage] Download failed with status:', response?.status);
     return { error: `Download failed (${response?.status || 'unknown status'})` };
   }
 
   const contentType = response.headers?.get('content-type') || '';
+  // eslint-disable-next-line no-console
+  console.log('[storage] Downloaded file content-type:', contentType);
+
   if (contentType && !contentType.toLowerCase().includes('pdf') && contentType !== 'application/octet-stream') {
+    // eslint-disable-next-line no-console
+    console.error('[storage] Invalid content type. Expected PDF, got:', contentType);
     return { error: 'Downloaded file is not a PDF' };
   }
 
@@ -85,7 +103,11 @@ export const uploadPdfFromUrl = async (url, prefix = 'report') => {
   try {
     const arrayBuffer = await response.arrayBuffer();
     buffer = Buffer.from(arrayBuffer);
+    // eslint-disable-next-line no-console
+    console.log('[storage] Downloaded buffer size:', buffer.length, 'bytes');
   } catch (error) {
+    // eslint-disable-next-line no-console
+    console.error('[storage] Failed to read arrayBuffer:', error);
     return { error: 'Failed to read downloaded file' };
   }
 

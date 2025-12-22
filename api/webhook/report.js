@@ -62,8 +62,12 @@ export default async function handler(req, res) {
       prefix: 'client',
     });
     if (error) {
+      // eslint-disable-next-line no-console
+      console.error('[webhook/report] Client PDF upload error:', error);
       return badRequest(res, `Client PDF upload failed: ${error}`);
     }
+    // eslint-disable-next-line no-console
+    console.log('[webhook/report] Client PDF uploaded successfully. Supabase URL:', url);
     resolvedClientUrl = url;
   }
 
@@ -74,8 +78,12 @@ export default async function handler(req, res) {
       prefix: 'coach',
     });
     if (error) {
+      // eslint-disable-next-line no-console
+      console.error('[webhook/report] Coach PDF upload error:', error);
       return badRequest(res, `Coach PDF upload failed: ${error}`);
     }
+    // eslint-disable-next-line no-console
+    console.log('[webhook/report] Coach PDF uploaded successfully. Supabase URL:', url);
     resolvedCoachUrl = url;
   }
 
@@ -88,7 +96,10 @@ export default async function handler(req, res) {
     .limit(1);
 
   if (selectError) {
-    return sendJson(res, 500, { error: 'Failed to check existing records' });
+    // Surface error details to aid debugging
+    // eslint-disable-next-line no-console
+    console.error('[webhook/report] selectError', selectError);
+    return sendJson(res, 500, { error: 'Failed to check existing records', detail: selectError.message || selectError });
   }
 
   const existing = existingRows && existingRows[0];
@@ -103,23 +114,35 @@ export default async function handler(req, res) {
       coach_pdf_url: resolvedCoachUrl || existing.coach_pdf_url,
     };
 
+    // eslint-disable-next-line no-console
+    console.log('[webhook/report] Updating existing record. Payload:', JSON.stringify(nextPayload, null, 2));
+
     const { error: updateError } = await supabaseAdmin.from('assessments').update(nextPayload).eq('id', existing.id);
     if (updateError) {
-      return sendJson(res, 500, { error: 'Failed to update record' });
+      // eslint-disable-next-line no-console
+      console.error('[webhook/report] updateError', updateError);
+      return sendJson(res, 500, { error: 'Failed to update record', detail: updateError.message || updateError });
     }
     return sendJson(res, 200, { ok: true, updated: true });
   }
 
-  const { error } = await supabaseAdmin.from('assessments').insert({
+  const insertPayload = {
     name,
     email,
     score: safeScore,
     client_pdf_url: resolvedClientUrl,
     coach_pdf_url: resolvedCoachUrl,
-  });
+  };
+
+  // eslint-disable-next-line no-console
+  console.log('[webhook/report] Inserting new record. Payload:', JSON.stringify(insertPayload, null, 2));
+
+  const { error } = await supabaseAdmin.from('assessments').insert(insertPayload);
 
   if (error) {
-    return sendJson(res, 500, { error: 'Failed to store report' });
+    // eslint-disable-next-line no-console
+    console.error('[webhook/report] insertError', error);
+    return sendJson(res, 500, { error: 'Failed to store report', detail: error.message || error });
   }
 
   return sendJson(res, 200, { ok: true });
