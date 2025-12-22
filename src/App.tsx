@@ -962,38 +962,37 @@ const AdminDashboardPage: React.FC<{ onLogout: () => void; onAuthExpired: () => 
         )}
 
         {previewPdf && (
-          <div className="fixed inset-0 z-50 bg-black/90 backdrop-blur-sm flex items-center justify-center p-2 sm:p-4">
-            <div className="bg-gradient-to-br from-gray-900 to-black border border-amber-400/30 rounded-xl sm:rounded-2xl shadow-2xl shadow-amber-400/20 w-full h-full sm:h-auto sm:max-w-7xl sm:max-h-[95vh] flex flex-col">
-              <div className="flex items-center justify-between p-3 sm:p-4 border-b border-amber-400/20 flex-shrink-0">
-                <h3 className="text-base sm:text-xl font-bold text-white truncate mr-2 sm:mr-4">{previewPdf.title}</h3>
+          <div className="fixed inset-0 z-50 bg-black flex items-center justify-center">
+            <div className="w-full h-full sm:w-[95vw] sm:h-[92vh] md:w-[90vw] md:h-[90vh] lg:w-[85vw] lg:h-[88vh] flex flex-col bg-gradient-to-br from-gray-900 to-black sm:border sm:border-amber-400/30 sm:rounded-2xl sm:shadow-2xl sm:shadow-amber-400/20">
+              <div className="flex items-center justify-between px-4 py-3 sm:p-4 border-b border-amber-400/20 flex-shrink-0 bg-gray-900/50">
+                <h3 className="text-sm sm:text-xl font-bold text-white truncate mr-2">{previewPdf.title}</h3>
                 <button
                   onClick={() => setPreviewPdf(null)}
-                  className="text-gray-400 hover:text-white transition-colors p-1.5 sm:p-2 flex-shrink-0"
+                  className="text-gray-400 hover:text-white transition-colors p-2 flex-shrink-0 -mr-2"
                   aria-label="Close preview"
                 >
                   <X className="h-5 w-5 sm:h-6 sm:w-6" />
                 </button>
               </div>
-              <div className="flex-1 min-h-0 overflow-hidden">
+              <div className="flex-1 overflow-hidden bg-gray-900">
                 <iframe
                   src={previewPdf.url}
                   className="w-full h-full border-0"
                   title={previewPdf.title}
                 />
               </div>
-              <div className="flex items-center justify-end gap-2 sm:gap-3 p-3 sm:p-4 border-t border-amber-400/20 flex-shrink-0">
+              <div className="flex items-center justify-end gap-2 sm:gap-3 px-4 py-3 sm:p-4 border-t border-amber-400/20 flex-shrink-0 bg-gray-900/50">
                 <a
                   href={previewPdf.url}
                   download
-                  className="inline-flex items-center px-3 py-2 sm:px-4 sm:py-2 rounded-lg text-xs sm:text-sm font-semibold bg-gradient-to-r from-amber-400 to-amber-500 text-black hover:from-amber-500 hover:to-amber-600 transition-all"
+                  className="inline-flex items-center px-4 py-2 rounded-lg text-xs sm:text-sm font-semibold bg-gradient-to-r from-amber-400 to-amber-500 text-black hover:from-amber-500 hover:to-amber-600 transition-all"
                 >
-                  <Download className="h-3.5 w-3.5 sm:h-4 sm:w-4 mr-1.5 sm:mr-2" />
-                  <span className="hidden xs:inline">Download PDF</span>
-                  <span className="xs:hidden">Download</span>
+                  <Download className="h-4 w-4 mr-1.5" />
+                  <span>Download</span>
                 </a>
                 <button
                   onClick={() => setPreviewPdf(null)}
-                  className="px-3 py-2 sm:px-4 sm:py-2 rounded-lg text-xs sm:text-sm font-semibold bg-black/50 border border-amber-400/30 text-amber-200 hover:bg-gray-900 transition-colors"
+                  className="px-4 py-2 rounded-lg text-xs sm:text-sm font-semibold bg-black/50 border border-amber-400/30 text-amber-200 hover:bg-gray-900 transition-colors"
                 >
                   Close
                 </button>
