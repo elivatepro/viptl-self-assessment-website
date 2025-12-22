@@ -107,9 +107,9 @@ export default async function handler(req, res) {
 
   if (existing) {
     const nextPayload = {
-      name: existing.name || name,
+      name,  // Always update with new name from Zapier
       email,
-      score: existing.score ?? safeScore,
+      score: safeScore,  // Always update with new score from Zapier
       client_pdf_url: resolvedClientUrl || existing.client_pdf_url,
       coach_pdf_url: resolvedCoachUrl || existing.coach_pdf_url,
     };

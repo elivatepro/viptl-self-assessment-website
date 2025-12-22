@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { ArrowRight, CheckCircle, Users, Target, Heart, Brain, Star, Calendar, Menu, X, ShieldCheck, LogOut, Loader2, Download } from 'lucide-react';
+import { ArrowRight, CheckCircle, Users, Target, Heart, Brain, Star, Calendar, Menu, X, ShieldCheck, LogOut, Loader2, Download, Eye } from 'lucide-react';
 import TypewriterText from './components/TypewriterText';
 import newMrWayneImage from './assets/new mr wayne.jpeg';
 
@@ -707,6 +707,7 @@ const AdminDashboardPage: React.FC<{ onLogout: () => void; onAuthExpired: () => 
   const [error, setError] = useState('');
   const [deleteTarget, setDeleteTarget] = useState<AssessmentRecord | null>(null);
   const [isDeleting, setIsDeleting] = useState(false);
+  const [previewPdf, setPreviewPdf] = useState<{ url: string; title: string } | null>(null);
 
   const loadReports = async () => {
     setIsLoading(true);
@@ -776,12 +777,19 @@ const AdminDashboardPage: React.FC<{ onLogout: () => void; onAuthExpired: () => 
     }
   };
 
-  const renderPdfLinks = (url?: string | null) => {
+  const renderPdfLinks = (url?: string | null, title?: string) => {
     if (!url) {
       return <span className="text-gray-500 text-sm">Not provided</span>;
     }
     return (
       <div className="flex items-center space-x-3">
+        <button
+          onClick={() => setPreviewPdf({ url, title: title || 'PDF Preview' })}
+          className="inline-flex items-center text-amber-300 hover:text-amber-200 text-sm font-semibold"
+        >
+          <Eye className="h-4 w-4 mr-1" />
+          Preview
+        </button>
         <a
           href={url}
           download
@@ -903,11 +911,11 @@ const AdminDashboardPage: React.FC<{ onLogout: () => void; onAuthExpired: () => 
               <div className="flex flex-col sm:flex-row sm:items-center gap-3">
                 <div className="bg-black/40 border border-amber-400/20 rounded-xl px-4 py-3">
                   <p className="text-xs uppercase tracking-wide text-amber-300 mb-2">Client Report</p>
-                  {renderPdfLinks(report.client_pdf_url)}
+                  {renderPdfLinks(report.client_pdf_url, `${report.name} - Client Report`)}
                 </div>
                 <div className="bg-black/40 border border-amber-400/20 rounded-xl px-4 py-3">
                   <p className="text-xs uppercase tracking-wide text-amber-300 mb-2">Coach Report</p>
-                  {renderPdfLinks(report.coach_pdf_url)}
+                  {renderPdfLinks(report.coach_pdf_url, `${report.name} - Coach Report`)}
                 </div>
                 <button
                   type="button"
@@ -947,6 +955,45 @@ const AdminDashboardPage: React.FC<{ onLogout: () => void; onAuthExpired: () => 
                   disabled={isDeleting}
                 >
                   {isDeleting ? 'Deleting...' : 'Delete'}
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {previewPdf && (
+          <div className="fixed inset-0 z-50 bg-black/90 backdrop-blur-sm flex items-center justify-center p-4">
+            <div className="bg-gradient-to-br from-gray-900 to-black border border-amber-400/30 rounded-2xl shadow-2xl shadow-amber-400/20 w-full max-w-6xl h-[90vh] flex flex-col">
+              <div className="flex items-center justify-between p-4 border-b border-amber-400/20">
+                <h3 className="text-xl font-bold text-white">{previewPdf.title}</h3>
+                <button
+                  onClick={() => setPreviewPdf(null)}
+                  className="text-gray-400 hover:text-white transition-colors p-2"
+                >
+                  <X className="h-6 w-6" />
+                </button>
+              </div>
+              <div className="flex-1 overflow-hidden">
+                <iframe
+                  src={previewPdf.url}
+                  className="w-full h-full"
+                  title={previewPdf.title}
+                />
+              </div>
+              <div className="flex items-center justify-end gap-3 p-4 border-t border-amber-400/20">
+                <a
+                  href={previewPdf.url}
+                  download
+                  className="inline-flex items-center px-4 py-2 rounded-lg text-sm font-semibold bg-gradient-to-r from-amber-400 to-amber-500 text-black hover:from-amber-500 hover:to-amber-600 transition-all"
+                >
+                  <Download className="h-4 w-4 mr-2" />
+                  Download PDF
+                </a>
+                <button
+                  onClick={() => setPreviewPdf(null)}
+                  className="px-4 py-2 rounded-lg text-sm font-semibold bg-black/50 border border-amber-400/30 text-amber-200 hover:bg-gray-900 transition-colors"
+                >
+                  Close
                 </button>
               </div>
             </div>
@@ -1121,9 +1168,9 @@ function App() {
   const [currentPage, setCurrentPage] = useState<Page>('home');
   const [isAdminAuthed, setIsAdminAuthed] = useState(false);
 
-  // Check URL path/query on component mount
+  // Check URL path on component mount
   useEffect(() => {
-    const { pathname, search } = window.location;
+    const { pathname } = window.location;
     if (pathname === '/admin') {
       setCurrentPage('login');
       return;
@@ -1131,16 +1178,6 @@ function App() {
     if (pathname === '/success') {
       setCurrentPage('success');
       return;
-    }
-
-    // Legacy query param support
-    const urlParams = new URLSearchParams(search);
-    const pageParam = urlParams.get('page');
-    if (pageParam === 'success') {
-      setCurrentPage('success');
-    }
-    if (pageParam === 'admin') {
-      setCurrentPage('login');
     }
   }, []);
 
