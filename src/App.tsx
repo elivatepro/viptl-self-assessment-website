@@ -1121,9 +1121,20 @@ function App() {
   const [currentPage, setCurrentPage] = useState<Page>('home');
   const [isAdminAuthed, setIsAdminAuthed] = useState(false);
 
-  // Check URL parameters on component mount
+  // Check URL path/query on component mount
   useEffect(() => {
-    const urlParams = new URLSearchParams(window.location.search);
+    const { pathname, search } = window.location;
+    if (pathname === '/admin') {
+      setCurrentPage('login');
+      return;
+    }
+    if (pathname === '/success') {
+      setCurrentPage('success');
+      return;
+    }
+
+    // Legacy query param support
+    const urlParams = new URLSearchParams(search);
     const pageParam = urlParams.get('page');
     if (pageParam === 'success') {
       setCurrentPage('success');
@@ -1132,6 +1143,18 @@ function App() {
       setCurrentPage('login');
     }
   }, []);
+
+  // Keep URL in sync when switching between key pages
+  useEffect(() => {
+    const { pathname } = window.location;
+    if (currentPage === 'login' && pathname !== '/admin') {
+      window.history.replaceState(null, '', '/admin');
+    } else if (currentPage === 'success' && pathname !== '/success') {
+      window.history.replaceState(null, '', '/success');
+    } else if (currentPage === 'home' && pathname !== '/') {
+      window.history.replaceState(null, '', '/');
+    }
+  }, [currentPage]);
 
   const handleLoginSuccess = () => {
     setIsAdminAuthed(true);
