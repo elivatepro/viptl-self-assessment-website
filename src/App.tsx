@@ -399,7 +399,7 @@ const AssessmentPage: React.FC = () => {
     iframe.style.height = '550px';
     iframe.style.width = '100%';
     iframe.style.transition = 'all 0.5s ease';
-    iframe.setAttribute('aria-label', 'VIPTL Self Assessment');
+    iframe.setAttribute('aria-label', 'VIPTL Self-Assessment');
 
     container.appendChild(iframe);
 
